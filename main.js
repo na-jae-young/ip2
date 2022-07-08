@@ -50,7 +50,17 @@ var app = http.createServer(function(request,response){
             var _url = request.url; // url 반환 /?id=html
             var queryData = url.parse(_url, true).query;
 
-            let HTML =            
+            db1.query(`select * from (select ip, count(ip) as cnt from ${queryData.id} group by ip) as a where a.cnt>10`,function(er,result_ip){
+                if(er){
+                    throw er
+                }
+                let i = 0
+                let ip_list = `${queryData.id}  10회 이상 접속 실패 ip`
+                while (i < result_ip.length){
+                    ip_list = ip_list + "<br>" + result_ip[i].ip
+                    i= i+1
+                }
+                let HTML =            
                 `<!doctype html><html>
                     <head>
                         <title>ip</title>
@@ -69,13 +79,17 @@ var app = http.createServer(function(request,response){
                             <input type='submit' value='조회'></input>
                         </form>
 
-                        <p>${queryData.id}</p>
+                        <p>${ip_list}</p>
                     </body>
                 </html>`
-            response.writeHead(200)
-            response.end(HTML)
-        }
+                response.writeHead(200)
+                response.end(HTML)
 
+            }) 
+
+        
+        }
+           
 
     }    else if(pathname === "/process"){
         console.log('process')
@@ -141,6 +155,8 @@ var app = http.createServer(function(request,response){
                                 i= i+1
                             } 
                             console.log('end',result.length)
+                            response.writeHead(302 , {location: encodeURI(`/?id=${table}`)})
+                            response.end();
                         })
                     }else if (type ==='보안'){
                         console.log('보안')
@@ -183,6 +199,8 @@ var app = http.createServer(function(request,response){
                                     i= i +1 
                                 }
                                 console.log('end',result.length)
+                                response.writeHead(302 , {location: encodeURI(`/?id=${table}`)})
+                                response.end();
                             })
                         })
                     }else if(type ==='MSSQL'){
@@ -217,10 +235,10 @@ var app = http.createServer(function(request,response){
                                 i= i+1
                             } 
                             console.log('end',res.length)
+                            response.writeHead(302 , {location: encodeURI(`/?id=${table}`)})
+                            response.end();
                         })
                     }
-                    response.writeHead(302 , {location: (`/?id=${table}`)})
-                    response.end();
                 }
                 //테이블이 존재하지 않을 경우 
 
